@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Street Cricket Championship - Gully Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 600px;
+            background: #2b2b2b;
+            border: 4px solid #f39c12;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.4);
+            text-align: center;
+        }
+
+        h1 {
+            color: #f39c12;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px #c0392b;
+            font-size: 24px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        /* Setup Screen */
+        .gully-select {
+            margin: 15px 0;
+        }
+
+        select, button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        select {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        button {
+            background: #e67e22;
+            color: white;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #d35400;
+            transform: scale(1.05);
+        }
+
+        /* Rules Info */
+        .rules-card {
+            background: #34495e;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 12px;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+
+        .rules-card h3 {
+            color: #f1c40f;
+            margin-bottom: 5px;
+        }
+
+        /* Pitch Canvas Area */
+        #pitch {
+            width: 100%;
+            height: 250px;
+            background-color: #d7ccc8;
+            border: 3px solid #8d6e63;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .gully-bg-1 { background: linear-gradient(0deg, #d7ccc8 60%, #90a4ae 60%); } /* Narrow Alley */
+        .gully-bg-2 { background: linear-gradient(0deg, #bcaaa4 60%, #e57373 60%); } /* Sharma Ji House */
+        .gully-bg-3 { background: linear-gradient(0deg, #a1887f 60%, #fff176 60%); } /* Building Site */
+
+        #batsman {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 35px;
+            z-index: 2;
+        }
+
+        #ball {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: red;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            display: none;
+            box-shadow: inset -2px -2px 0px rgba(0,0,0,0.5);
+            z-index: 3;
+        }
+
+        #aunty-window {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 30px;
+        }
+
+        #car {
+            position: absolute;
+            bottom: 80px;
+            left: 10px;
+            font-size: 30px;
+        }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-shot {
+            background: #2980b9;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .btn-shot:hover {
+            background: #3498db;
+        }
+
+        /* Scoreboard */
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            background: #111;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #2ecc71;
+            font-family: monospace;
+        }
+
+        #log {
+            height: 50px;
+            background: #000;
+            color: #ffca28;
+            padding: 5px;
+            font-size: 13px;
+            margin-top: 10px;
+            border-radius: 4px;
+            overflow-y: auto;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>🏏 GULLY CRICKET 🏏</h1>
+
+    <!-- SCREEN 1: SELECT GULLY -->
+    <div id="setup-screen" class="screen active">
+        <p>Choose your local Gully to play!</p>
+        
+        <div class="gully-select">
+            <select id="gully-choice">
+                <option value="1">Narrow Parchatti Alley (High chance of wall catches)</option>
+                <option value="2">Sharma Ji's Corridor (Dangerous Aunty's House nearby!)</option>
+                <option value="3">Under-Construction Plot (Rough pitch, unpredictable bounce)</option>
+            </select>
+        </div>
+
+        <div class="rules-card">
+            <h3>📜 LOCAL GULLY RULES IN EFFECT:</h3>
+            <ul>
+                <li><strong>Direct Hit Over House:</strong> LOST BALL = OUT!</li>
+                <li><strong>Aunty's Window:</strong> Hit wrong shot → Glass breaks → Aunty takes ball & OUT!</li>
+                <li><strong>One Tappa (1-Bounce Catch):</strong> OUT!</li>
+                <li><strong>Car Hit:</strong> Hit the parked uncle's car = 1 Run Penalty + Warning!</li>
+                <li><strong>Baby Over:</strong> 3 Balls per over.</li>
+            </ul>
+        </div>
+
+        <button onclick="startGame()">Toss & Start Match!</button>
+    </div>
+
+    <!-- SCREEN 2: GAMEPLAY -->
+    <div id="game-screen" class="screen">
+        <div class="scoreboard">
+            <div>Runs: <span id="runs">0</span>/<span id="wickets">0</span></div>
+            <div>Overs: <span id="overs">0.0</span>/2.0</div>
+            <div>Target: <span id="target">22</span></div>
+        </div>
+
+        <div id="pitch" class="gully-bg-1">
+            <div id="aunty-window" title="Aunty's Balcony">👵🏠</div>
+            <div id="car" title="Uncle's New Car">🚗</div>
+            <div id="ball"></div>
+            <div id="batsman">🏏</div>
+        </div>
+
+        <p id="bowler-status">Bowler is coming up to bowl...</p>
+
+        <div class="controls">
+            <button class="btn-shot" onclick="playShot('defend')">🛡️ Defend<br>(Safe Single/1-Tappa)</button>
+            <button class="btn-shot" onclick="playShot('drive')">🏏 Straight Drive<br>(Ground Shot)</button>
+            <button class="btn-shot" onclick="playShot('loft')">🚀 Lofted Shot<br>(High Risk / Big Runs)</button>
+        </div>
+
+        <div id="log">Game started! Match is 2 Overs (6 balls). Reach target without getting OUT!</div>
+    </div>
+
+    <!-- SCREEN 3: GAME OVER -->
+    <div id="gameover-screen" class="screen">
+        <h2 id="result-title">MATCH OVER</h2>
+        <p id="result-desc" style="margin: 15px 0; font-size: 16px;"></p>
+        <button onclick="resetGame()">Play Again (Rematch)</button>
+    </div>
+</div>
+
+<script>
+    // Game Variables
+    let runs = 0;
+    let wickets = 0;
+    let totalBalls = 0;
+    const maxBalls = 6; // 2 Baby Overs (3 balls each)
+    let target = 0;
+    let selectedGully = 1;
+    let isBowling = false;
+    let ballSpeed = 1000;
+
+    function startGame() {
+        selectedGully = document.getElementById("gully-choice").value;
+        target = Math.floor(Math.random() * 10) + 15; // Random target between 15 and 24
+        
+        // Reset state
+        runs = 0;
+        wickets = 0;
+        totalBalls = 0;
+
+        // Apply Gully Visuals
+        const pitch = document.getElementById("pitch");
+        pitch.className = "gully-bg-" + selectedGully;
+
+        document.getElementById("target").innerText = target;
+        document.getElementById("runs").innerText = runs;
+        document.getElementById("wickets").innerText = wickets;
+        document.getElementById("overs").innerText = "0.0";
+
+        showScreen("game-screen");
+        log("Toss won! You chose to bat. Target is " + target + " runs.");
+        prepareDelivery();
+    }
+
+    function prepareDelivery() {
+        if (totalBalls >= maxBalls || wickets >= 2) {
+            endGame();
+            return;
+        }
+
+        isBowling = true;
+        document.getElementById("bowler-status").innerText = "Bowler is running in... GET READY!";
+        
+        const ball = document.getElementById("ball");
+        ball.style.display = "block";
+        ball.style.top = "20px";
+        ball.style.left = "50%";
+
+        // Animate ball coming down pitch
+        let pos = 20;
+        let interval = setInterval(() => {
+            if (pos >= 180 || !isBowling) {
+                clearInterval(interval);
+            } else {
+                pos += 10;
+                ball.style.top = pos + "px";
+            }
+        }, 50);
+    }
+
+    function playShot(shotType) {
+        if (!isBowling) return; // Prevent clicking before ball is bowled
+        isBowling = false;
+
+        totalBalls++;
+        let overFormatted = Math.floor(totalBalls / 3) + "." + (totalBalls % 3);
+        document.getElementById("overs").innerText = overFormatted;
+
+        const ball = document.getElementById("ball");
+        let rand = Math.random();
+
+        // Gully Specific Modifiers
+        let auntyRisk = selectedGully == 2 ? 0.35 : 0.15; // Higher risk in Sharma Ji's Gully
+        let wallBounceRisk = selectedGully == 1 ? 0.3 : 0.1;
+
+        if (shotType === 'defend') {
+            if (rand < 0.15) {
+                // One Tappa Out Rule!
+                wickets++;
+                log("❌ OUT! One-Tappa (One Bounce) Catch taken by fielder sitting on the porch!");
+                animateBall(50, 180);
+            } else if (rand < 0.3) {
+                log("🚗 Hit Uncle's car! 1 Run Penalty subtracted for scratching paint!");
+                runs = Math.max(0, runs - 1);
+                animateBall(20, 150);
+            } else {
+                let r = Math.floor(Math.random() * 2); // 0 or 1 run
+                runs += r;
+                log(`🛡️ Safe Defense! Took ${r} quick single.`);
+                animateBall(50, 200);
+            }
+        } 
+        else if (shotType === 'drive') {
+            if (rand < auntyRisk) {
+                // Wrong shot into Aunty's House!
+                wickets++;
+                log("👵💥 KHADAK! Ball went straight into Angry Aunty's balcony! She confiscated the ball. YOU ARE OUT!");
+                animateBall(80, 20); // Towards window
+            } else if (rand < 0.7) {
+                let r = Math.floor(Math.random() * 3) + 1; // 1 to 3 runs
+                runs += r;
+                log(`🏏 Beautiful ground shot through the alley gap! Scored ${r} runs.`);
+                animateBall(50, 50);
+            } else {
+                wickets++;
+                log("❌ OUT! Direct catch by the fielder standing near the electric pole!");
+                animateBall(50, 100);
+            }
+        } 
+        else if (shotType === 'loft') {
+            if (rand < 0.30) {
+                // Over the building rule (Lost Ball / Out)
+                wickets++;
+                log("🚫 OUT! 'Jo fenkega wohi laayega!' You hit the ball over the roof. Lost ball = OUT!");
+                animateBall(50, -30);
+            } else if (rand < 0.30 + auntyRisk) {
+                // Glass Break Rule
+                wickets++;
+                log("💥 GLASS SHATTERS! You broke Sharma ji's window glass! Everyone ran away. OUT!");
+                animateBall(85, 20);
+            } else if (rand < 0.8) {
+                runs += 6;
+                log("🚀 SIXER! Clean hit straight into the main road!");
+                animateBall(50, -20);
+            } else {
+                wickets++;
+                log("❌ OUT! High catch taken near the terrace boundary!");
+                animateBall(20, 40);
+            }
+        }
+
+        // Update display
+        document.getElementById("runs").innerText = runs;
+        document.getElementById("wickets").innerText = wickets;
+
+        // Check Win/Loss conditions
+        if (runs >= target) {
+            endGame(true);
+        } else if (wickets >= 2 || totalBalls >= maxBalls) {
+            endGame(false);
+        } else {
+            setTimeout(prepareDelivery, 2000);
+        }
+    }
+
+    function animateBall(leftPercent, topPx) {
+        const ball = document.getElementById("ball");
+        ball.style.left = leftPercent + "%";
+        ball.style.top = topPx + "px";
+    }
+
+    function log(msg) {
+        const logDiv = document.getElementById("log");
+        logDiv.innerHTML = "• " + msg + "<br>" + logDiv.innerHTML;
+    }
+
+    function endGame(isWin) {
+        setTimeout(() => {
+            showScreen("gameover-screen");
+            const title = document.getElementById("result-title");
+            const desc = document.getElementById("result-desc");
+
+            if (runs >= target) {
+                title.innerText = "🏆 GULLY CHAMPIONS!";
+                title.style.color = "#2ecc71";
+                desc.innerText = `You successfully chased down ${target} runs! You own this Gully now!`;
+            } else {
+                title.innerText = "👴 MATCH LOST / BAAL GUM HO GAYI!";
+                title.style.color = "#e74c3c";
+                desc.innerText = `You scored ${runs}/${wickets} in ${Math.floor(totalBalls/3)}.${totalBalls%3} overs. Target was ${target}. Better luck next match!`;
+            }
+        }, 1200);
+    }
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function resetGame() {
+        showScreen("setup-screen");
+    }
+</script>
+
+</body>
+</html>
